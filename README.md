@@ -18,7 +18,39 @@ uses
   OpenAIClient, OpenAIDtos;
 ```
 
-### Creating the client
+### Creating the client with TRestClient
+```delphi
+function TRestResource3_AskChatGPT(askstream: string; 
+                                 aResponseHeader:TRestResponseHandler):string;
+var pstrm: TStream;
+    JPostdat: string;
+    jo: TJSON; arest: TRestResource;
+begin
+  JPostDat:= '{'+
+    '"model": "text-davinci-003",'+
+    '"prompt": "%s",'+
+    '"max_tokens": 2048,'+
+    '"temperature": 0.15}';
+
+  with TRestClient.create(self) do begin
+      arest:= Resource('https://api.openai.com/v1/completions');
+      arest.ContentType('application/json');
+      arest.Authorization('Bearer '+CHATGPT_APIKEY2);
+      ConnectionType:= hctWinInet;
+    try
+      pstrm:= TStringStream.create(format(JPostDat,[askstream]));
+      jo:= TJSON.Create(); 
+      jo.parse(arest.Post(pstrm)); 
+      writeln('responsecode: '+itoa(responsecode)+' verifycert: '+botostr(verifycert));
+      result:= jo.values['choices'].asarray[0].asobject['text'].asstring;
+    finally
+      Free;
+      jo.Free;
+      pStrm.Free;        
+    end; 
+  end; //with   
+end; 
+```
 
 The library needs to be configured with your account's secret API key, which is available on the [website](https://beta.openai.com/account/api-keys). We recommend setting it as an environment variable named `OPENAI_API_KEY`. Once you have the API key, just create the client and set the key as the following:
 
